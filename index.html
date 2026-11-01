@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тест: Орієнтування на місцевості</title>
+<style>
+:root{--ink:#1d3b40;--bg:#e4f1f6;--card:#fff;--line:#b9d6de;--teal:#1b7f8c;--ok:#2e9e57;--okbg:#d9f4e3;--bad:#d64545;--badbg:#fde1e1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Trebuchet MS","Segoe UI",Verdana,sans-serif;padding:16px}
+.wrap{max-width:680px;margin:0 auto}
+header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+header svg{width:64px;height:64px;flex:none}
+h1{font-size:1.5rem;margin:0;line-height:1.2}
+header p{margin:2px 0 0;font-size:.9rem;color:#4b6d73}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px}
+.dots{display:flex;gap:6px;margin-bottom:16px}
+.dots i{flex:1;height:10px;border-radius:5px;background:#dbe8ec}
+.dots i.cur{background:var(--teal)}
+.dots i.ok{background:var(--ok)}
+.dots i.bad{background:var(--bad)}
+.num{font-size:.9rem;color:#4b6d73;margin-bottom:6px}
+.q{font-size:1.2rem;font-weight:bold;margin:0 0 16px}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:#f4fafc;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--okbg);border-color:var(--ok);color:#14602f;font-weight:bold}
+.opt.bad{background:var(--badbg);border-color:var(--bad);color:#8f1f1f;font-weight:bold}
+.fb{min-height:1.5em;margin:6px 0 12px;font-size:.95rem}
+.fb.ok{color:#14602f}.fb.bad{color:#8f1f1f}
+.btn{font:inherit;font-weight:bold;background:var(--teal);color:#fff;border:0;border-radius:12px;padding:12px 22px;cursor:pointer}
+.btn:hover{background:#15666f}
+.res{text-align:center}
+.score{font-size:3rem;font-weight:bold;margin:4px 0}
+.score span{color:var(--ok)}
+.stars{font-size:2rem;letter-spacing:4px}
+.res h2{margin:6px 0}
+.miss{text-align:left;margin:18px 0}
+.miss div{background:var(--badbg);border-left:6px solid var(--bad);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.95rem}
+.miss b{color:#14602f}
+.all{background:var(--okbg);border-left:6px solid var(--ok);border-radius:8px;padding:10px 12px}
+.sign svg{width:150px;height:105px;display:block;margin:0 0 16px;border-radius:6px}
+.miss svg{width:56px;height:39px;vertical-align:middle;margin-right:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#fff" stroke="#1b7f8c" stroke-width="4"/><polygon points="32,8 39,32 25,32" fill="#2b6fd0"/><polygon points="32,56 39,32 25,32" fill="#d64545"/><circle cx="32" cy="32" r="3" fill="#1d3b40"/></svg>
+<div><h1>Орієнтування на місцевості</h1><p>Тест · Природа · 4 клас</p></div>
+</header>
+<div class="card" id="app"></div>
+</div>
+<script>
+// Перша відповідь у кожному питанні — правильна (перед показом варіанти перемішуються).
+const POOL=[
+{q:"Що означає «орієнтуватися на місцевості»?",o:["Уміти визначати сторони горизонту","Уміти малювати план місцевості","Знати назви всіх міст","Уміти вимірювати відстані лінійкою"],e:"Орієнтуватися — це знати, з якого боку від тебе північ, південь, захід і схід."},
+{q:"Який спосіб визначення сторін горизонту найдавніший?",o:["За Сонцем","За компасом","За планом місцевості","За картою"],e:"Найдавніший спосіб — орієнтування за Сонцем."},
+{q:"Опівдні ти став обличчям у бік своєї тіні. Що буде перед тобою?",o:["Північ","Південь","Схід","Захід"],e:"Перед тобою — північ, за спиною — південь."},
+{q:"Ти стоїш обличчям до півночі. Що буде за твоєю спиною?",o:["Південь","Схід","Захід","Північ"],e:"За спиною — південь."},
+{q:"Ти стоїш обличчям до півночі. На яку сторону горизонту покаже права рука?",o:["Схід","Захід","Південь","Північ"],e:"Права рука покаже на схід, а ліва — на захід."},
+{q:"Ти стоїш обличчям до півночі. На яку сторону горизонту покаже ліва рука?",o:["Захід","Схід","Південь","Північ"],e:"Ліва рука покаже на захід."},
+{q:"Що означає скорочення «Зх.» на циферблаті компаса?",o:["Захід","Схід","Південь","Північ"],e:"Пн. — північ, Пд. — південь, Сх. — схід, Зх. — захід."},
+{q:"Яка головна частина компаса?",o:["Рухлива намагнічена стрілка","Пружина","Корпус із віконцем","Лінійка"],e:"Головна частина компаса — рухлива намагнічена стрілка."},
+{q:"На яку сторону горизонту вказує синій кінець стрілки компаса?",o:["На північ","На південь","На схід","На захід"],e:"Синій кінець стрілки вказує на північ."},
+{q:"На яку сторону горизонту вказує червоний кінець стрілки компаса?",o:["На південь","На північ","На схід","На захід"],e:"Червоний кінець стрілки вказує на південь."},
+{q:"Для чого в компасі потрібна пружина?",o:["Щоб зупиняти стрілку, коли компас не працює","Щоб стрілка крутилася швидше","Щоб компас можна було закрити","Щоб стрілка світилася"],e:"Пружина зупиняє рух стрілки, коли компас не працює."},
+{q:"Де компас може показувати сторони горизонту неправильно?",o:["Біля ліній електропередач і залізниці","У ясну погоду на лузі","На березі озера","У класі біля вікна"],e:"Компас помиляється під час грози, біля ліній електропередач і залізниці."},
+{q:"Чи можна дійти до лінії горизонту?",o:["Ні, вона віддаляється, коли ми йдемо","Так, якщо йти довго","Так, але тільки по дорозі","Так, але тільки з компасом"],e:"Лінія горизонту — це видима межа неба із землею. Вона віддаляється від нас."},
+{q:"Чим план місцевості відрізняється від малюнка місцевості?",o:["На плані об’єкти показано умовними знаками","На плані немає жодних позначень","На плані все намальовано в кольорі, як у житті","Нічим, вони однакові"],e:"План складають за допомогою умовних знаків і масштабу."},
+{q:"Масштаб записано так: 1 : 40 000. Який це масштаб?",o:["Числовий","Іменований","Лінійний","Кутовий"],e:"Числовий масштаб записують у вигляді відношення, наприклад 1 : 40 000."},
+{q:"Масштаб записано словами: «в 1 сантиметрі 400 метрів». Який це масштаб?",o:["Іменований","Числовий","Лінійний","Кутовий"],e:"Іменований масштаб записують словами."},
+{q:"Масштаб накреслено у вигляді лінійки з поділками 0, 400, 800, 1200, 1600 м. Який це масштаб?",o:["Лінійний","Числовий","Іменований","Кутовий"],e:"Лінійний масштаб має вигляд лінійки з підписаними поділками."},
+{q:"На плані відстань між двома об’єктами — 2 см. Масштаб: 1 см — 400 м. Яка справжня відстань?",o:["800 м","200 м","402 м","1600 м"],e:"400 м · 2 = 800 м."},
+{q:"На плані відстань між двома об’єктами — 3 см. Масштаб: 1 см — 400 м. Яка справжня відстань?",o:["1200 м","1000 м","403 м","133 м"],e:"400 м · 3 = 1200 м."},
+{q:"Для чого, крім креслення плану, використовують масштаб?",o:["Щоб обчислювати справжні відстані між об’єктами","Щоб визначати сторони горизонту","Щоб зупиняти стрілку компаса","Щоб розфарбовувати план"],e:"Знаючи масштаб, можна обчислити справжні відстані між об’єктами."}
+];
+// Умовні знаки з мал. 10 (малюнки SVG).
+const F=(bg,inner)=>'<svg viewBox="0 0 80 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="78" height="54" fill="'+bg+'" stroke="#555" stroke-width="2"/>'+inner+'</svg>';
+const grid=(f,cols,rows,x0,y0,dx,dy)=>{let t='';for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)t+=f(x0+c*dx,y0+r*dy);return t};
+const SIGNS=[
+{n:'Село. Церква',s:F('#e4503c','<path d="M0 17H80M0 41H80M14 0V56M66 0V56M40 0V17M40 41V56" stroke="#fff" stroke-width="2.5"/><rect x="28" y="15" width="24" height="26" fill="#fff"/><path d="M37.5 19h5v5h5v5h-5v8h-5v-8h-5v-5h5z" fill="#555"/><rect x="4" y="5" width="5" height="4" fill="#222"/><rect x="20" y="4" width="6" height="4" fill="#222"/><rect x="28" y="9" width="4" height="3" fill="#222"/><rect x="46" y="5" width="5" height="4" fill="#222"/><rect x="56" y="10" width="5" height="3" fill="#222"/><rect x="70" y="5" width="5" height="4" fill="#222"/><rect x="4" y="26" width="5" height="4" fill="#222"/><rect x="18" y="24" width="5" height="4" fill="#222"/><rect x="18" y="32" width="4" height="3" fill="#222"/><rect x="56" y="24" width="5" height="4" fill="#222"/><rect x="57" y="32" width="4" height="3" fill="#222"/><rect x="70" y="28" width="5" height="4" fill="#222"/><rect x="4" y="46" width="5" height="4" fill="#222"/><rect x="20" y="45" width="6" height="4" fill="#222"/><rect x="30" y="49" width="4" height="3" fill="#222"/><rect x="46" y="45" width="5" height="4" fill="#222"/><rect x="55" y="49" width="5" height="3" fill="#222"/><rect x="70" y="46" width="5" height="4" fill="#222"/>')},
+{n:'Місто. Памʼятник',s:F('#e4503c','<path d="M0 14H80M0 30H80M0 44H80M18 0V56M40 0V56M60 0V56" stroke="#fff" stroke-width="2.5"/><circle cx="18" cy="30" r="7" fill="#fff"/><path d="M15.5 33V29L18 25L20.5 29V33Z" fill="#777"/><rect x="4" y="4" width="5" height="4" fill="#222"/><rect x="8" y="6" width="6" height="4" fill="#222"/><rect x="4" y="18" width="5" height="4" fill="#222"/><rect x="4" y="34" width="5" height="4" fill="#222"/><rect x="4" y="48" width="5" height="4" fill="#222"/><rect x="22" y="4" width="5" height="4" fill="#222"/><rect x="30" y="6" width="6" height="4" fill="#222"/><rect x="23" y="7" width="4" height="3" fill="#222"/><rect x="22" y="18" width="5" height="4" fill="#222"/><rect x="30" y="22" width="6" height="4" fill="#222"/><rect x="30" y="36" width="6" height="4" fill="#222"/><rect x="23" y="37" width="4" height="3" fill="#222"/><rect x="22" y="48" width="5" height="4" fill="#222"/><rect x="44" y="4" width="5" height="4" fill="#222"/><rect x="50" y="6" width="6" height="4" fill="#222"/><rect x="45" y="7" width="4" height="3" fill="#222"/><rect x="44" y="18" width="5" height="4" fill="#222"/><rect x="50" y="22" width="6" height="4" fill="#222"/><rect x="45" y="23" width="4" height="3" fill="#222"/><rect x="44" y="34" width="5" height="4" fill="#222"/><rect x="50" y="36" width="6" height="4" fill="#222"/><rect x="45" y="37" width="4" height="3" fill="#222"/><rect x="44" y="48" width="5" height="4" fill="#222"/><rect x="64" y="4" width="5" height="4" fill="#222"/><rect x="70" y="6" width="6" height="4" fill="#222"/><rect x="65" y="7" width="4" height="3" fill="#222"/><rect x="64" y="18" width="5" height="4" fill="#222"/><rect x="70" y="22" width="6" height="4" fill="#222"/><rect x="65" y="23" width="4" height="3" fill="#222"/><rect x="64" y="34" width="5" height="4" fill="#222"/><rect x="70" y="36" width="6" height="4" fill="#222"/><rect x="65" y="37" width="4" height="3" fill="#222"/><rect x="64" y="48" width="5" height="4" fill="#222"/>')},
+{n:'Фруктовий сад',s:F('#cfe8a4',grid((x,y)=>'<circle cx="'+x+'" cy="'+y+'" r="3.5" fill="#fff" stroke="#3b7a2a"/>',6,4,12,10,12,12))},
+{n:'Широколистий ліс',s:F('#2f9e44','<ellipse cx="40" cy="22" rx="13" ry="14" fill="#fff"/><path d="M40 36V48" stroke="#fff" stroke-width="3"/>')},
+{n:'Хвойний ліс',s:F('#2f9e44','<path d="M40 8L26 32H54ZM40 20L22 44H58Z" fill="#fff"/>')},
+{n:'Поле, город',s:F('#d2ad66','<rect x="3" y="3" width="22" height="18" fill="#fff" stroke="#555"/><text x="14" y="17" font-size="15" text-anchor="middle" fill="#222" font-family="Arial">П</text>')},
+{n:'Ґрунтова дорога',s:F('#fff','<path d="M0 44L80 14" stroke="#e0a020" stroke-width="4"/>')},
+{n:'Міст',s:F('#fff','<path d="M6 50L74 8" stroke="#e0a838" stroke-width="4.5" stroke-linecap="butt"/><g transform="translate(40 29) rotate(-31.7)"><rect x="-12" y="-7" width="24" height="14" fill="#fff" stroke="#333" stroke-width="1.4"/><path d="M-12 0H12" stroke="#e0a838" stroke-width="3"/></g>')},
+{n:'Луки',s:F('#9bd677',grid((x,y)=>'<path d="M'+x+' '+y+'v7M'+(x+4)+' '+y+'v7" stroke="#2f6b2a" stroke-width="1.5"/>',5,3,8,8,15,15))},
+{n:'Залізниця',s:F('#fff','<path d="M0 28H80" stroke="#222" stroke-width="3"/><path d="M0 28H80" stroke="#222" stroke-width="12" stroke-dasharray="2 5"/>')},
+{n:'Озеро',s:F('#fff','<path d="M18 30C14 14 36 8 50 14C66 20 66 42 48 46C32 50 20 44 18 30Z" fill="#2b8fd6" stroke="#1b5fa0" stroke-width="2"/>')},
+{n:'Стежка',s:F('#fff','<path d="M0 18Q30 14 44 32T80 44" fill="none" stroke="#333" stroke-width="1.8" stroke-dasharray="5 3"/>')},
+{n:'Шосе',s:F('#fff','<path d="M0 46L80 10" stroke="#6a5fc0" stroke-width="5"/><path d="M0 46L80 10" stroke="#e8e6ff" stroke-width="1.5"/>')},
+{n:'Річка',s:F('#fff','<path d="M0 36C16 10 30 50 46 28S68 14 80 22" fill="none" stroke="#1f78c8" stroke-width="3.5"/>')}
+];
+const N=12, NS=4, app=document.getElementById('app');
+let set,i,score,res;
+const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+function start(){
+ const sg=shuffle(SIGNS).slice(0,NS).map(g=>({q:'Що позначає цей умовний знак?',img:g.s,e:'Це умовний знак «'+g.n+'» (мал. 10).',o:[g.n].concat(shuffle(SIGNS.filter(x=>x.n!==g.n)).slice(0,3).map(x=>x.n))}));
+ set=shuffle(POOL).slice(0,N-NS).concat(sg).map(x=>({q:x.q,e:x.e,img:x.img,right:x.o[0],opts:shuffle(x.o)}));
+ i=0;score=0;res=[];show();
+}
+function dots(){return '<div class="dots">'+set.map((_,k)=>'<i class="'+(k<res.length?(res[k]?'ok':'bad'):(k===i?'cur':''))+'"></i>').join('')+'</div>'}
+function show(){
+ const x=set[i];
+ app.innerHTML=dots()+'<div class="num">Питання '+(i+1)+' з '+N+'</div><p class="q">'+x.q+'</p>'+(x.img?'<div class="sign">'+x.img+'</div>':'')+'<div id="opts"></div><div class="fb" id="fb" aria-live="polite"></div><button class="btn hide" id="next"></button>';
+ const box=document.getElementById('opts');
+ x.opts.forEach(t=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=()=>answer(b,t);box.appendChild(b)});
+}
+function answer(btn,t){
+ const x=set[i],ok=t===x.right,fb=document.getElementById('fb');
+ document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===x.right)b.classList.add('ok')});
+ if(!ok)btn.classList.add('bad');
+ res.push(ok);if(ok)score++;
+ fb.className='fb '+(ok?'ok':'bad');
+ fb.textContent=(ok?'Правильно! ':'Не зовсім. ')+x.e;
+ document.querySelector('.dots').outerHTML=dots();
+ const n=document.getElementById('next');n.className='btn';n.textContent=(i+1<N)?'Далі':'Показати результат';n.onclick=()=>{i++;i<N?show():finish()};n.focus();
+}
+function finish(){
+ const mis=set.filter((_,k)=>!res[k]);
+ const msg=score>=9?['Чудово! Ти справжній мандрівник-дослідник!','★★★']:score>=7?['Добре! Ти добре орієнтуєшся на місцевості.','★★☆']:score>=5?['Непогано, але є над чим попрацювати.','★☆☆']:['Перечитай параграф і спробуй ще раз — усе вийде!','☆☆☆'];
+ app.innerHTML='<div class="res">'+dots()+'<div class="stars">'+msg[1]+'</div><div class="score"><span>'+score+'</span> / '+N+'</div><h2>'+msg[0]+'</h2></div>'
+ +'<div class="miss">'+(mis.length?'<p><b>Повтори:</b></p>'+mis.map(m=>'<div>'+(m.img?m.img+'Умовний знак':m.q)+'<br><b>Правильна відповідь: '+m.right+'</b></div>').join(''):'<div class="all">Жодної помилки — відмінний результат!</div>')+'</div>'
+ +'<div class="res"><button class="btn" id="again">Пройти ще раз (нові питання)</button></div>';
+ document.getElementById('again').onclick=start;
+}
+start();
+</script>
+</body>
+</html>
